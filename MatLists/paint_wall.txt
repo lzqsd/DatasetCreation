@@ -1,0 +1,10 @@
+Material__paint_matte
+Material__thick_strokes_paint_green_glossy_paint
+Material__thick_strokes_paint
+Material__thick_strokes_paint_blue_mat_paint
+Material__paint_varnished
+Material__paint_satin
+Material__gray_matte
+Material__green_matte
+Material__blue_matte
+Material__orange_matte

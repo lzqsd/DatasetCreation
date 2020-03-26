@@ -1,0 +1,27 @@
+apartment: fabric, specular_stone, rough_stone, wood
+bathroom: specular_stone, rough_stone
+bedroom: fabric, rough_stone, wood
+hotel: fabric, rough_stone, wood
+bookstore: fabric, specular_stone, rough_stone, wood
+library: fabric, specular_stone, rough_stone, wood
+classroom: specular_stone, rough_stone, wood
+closet: fabric, specular_stone, rough_stone, wood
+computer cluster: specular_stone, rough_stone, wood
+conference room: fabric, specular_stone, rough_stone, wood
+copy: specular_stone, rough_stone, wood
+mail room: specular_stone, rough_stone, wood
+dining room: fabric, specular_stone, rough_stone, wood
+game room: fabric, specular_stone, rough_stone, wood
+gym: specular_stone, rough_stone, wood
+hallway: specular_stone, rough_stone, wood
+kitchen: specular_stone, rough_stone, wood
+laundry room: specular_stone, rough_stone, wood
+lounge: fabric, specular_stone, rough_stone, wood
+living room: fabric, specular_stone, rough_stone, wood
+lobby: fabric, specular_stone, rough_stone, wood
+office: fabric, specular_stone, rough_stone, wood
+stairs: fabric, specular_stone, rough_stone, wood
+storage: specular_stone, rough_stone, wood
+basement: specular_stone, rough_stone, wood
+garage: specular_stone, rough_stone, wood
+misc: specular_stone, rough_stone, wood

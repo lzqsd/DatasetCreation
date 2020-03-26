@@ -1,0 +1,27 @@
+apartment: fabric, paint, rough_stone
+bathroom: specular_stone, rough_stone, paint
+bedroom: fabric, paint, rough_stone
+hotel: fabric, paint, rough_stone
+bookstore: fabric, paint, rough_stone
+Library: fabric, paint, rough_stone
+classroom: fabric, paint, rough_stone
+closet: paint, rough_stone
+computer cluster: paint, rough_stone
+conference room: fabric, paint, rough_stone
+copy: fabric, paint, rough_stone
+mail room: fabric, paint, rough_stone
+dining room: fabric, paint, rough_stone
+game room: fabric, paint, rough_stone
+gym: fabric, paint, rough_stone
+hallway: fabric, paint, rough_stone
+kitchen: specular_stone, rough_stone, paint
+laundry room: fabric, paint, rough_stone
+living room: fabric, paint, rough_stone
+lounge: fabric, paint, rough_stone
+lobby: fabric, paint, rough_stone
+office: fabric, paint, rough_stone
+stairs: fabric, paint, rough_stone
+storage: fabric, paint, rough_stone
+basement: fabric, paint, rough_stone
+garage: fabric, paint, rough_stone
+misc: paint, rough_stone

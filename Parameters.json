@@ -1,0 +1,17 @@
+{
+	"scannet" : "../../Assets/scannet-sample/",
+    "scan2cad": "../../../full_annotations.json",
+	"shapenet" : "../../../../../uv_mapped/", 
+    "shapenetAbs" : "/newfoundland/zhl/Scan2cad/uv_mapped/", 
+    "scannet_layout": "../../../../../layoutMesh/", 
+    "scannet_layoutAbs": "/newfoundland/zhl/Scan2cad/layoutMesh/",  
+    "scannet_camAbs": "/newfoundland/zhl/ScanNet/", 
+    "adobestock": "../../../../../BRDFOriginDataset", 
+    "adobestockAbs": "/newfoundland/zhl/Scan2cad/BRDFOriginDataset/", 
+    "envmap": "../../../../../EnvDataset", 
+    "envmapAbs": "/newfoundland/zhl/Scan2cad/EnvDataset/", 
+	"scannet_voxelized" : "../../Assets/scannet-voxelized-sdf-sample/",
+	"shapenet_voxelized" : "../../Assets/shapenet-voxelized-df-sample/",
+	"centers" : "../../Assets/training-data/scan-centers-sample/",
+	"heatmaps" : "../../Assets/training-data/CAD-heatmaps-sample/"
+}
