@@ -8,6 +8,10 @@ import argparse
 import os.path as osp
 import pickle
 import align_utils as utils
+import xml.etree.ElementTree as et
+from xml.dom import minidom
+import cv2
+import struct
 
 
 def loadMesh(name ):
@@ -421,7 +425,6 @@ def sampleCameraPoses(cverts, boxes,
 
         while accumLen < totalLen:
             # compute point location
-
             for cnt in range(0, sampleNum ):
                 pointLoc = origin + accumLen * direc
                 pointLoc += (np.random.random() * (distMax - distMin ) \
@@ -454,9 +457,6 @@ def sampleCameraPoses(cverts, boxes,
                     camPose = np.zeros((3, 3), dtype=np.float32 )
                     camPose[0, :] = pointLoc
 
-                    theta = np.random.random() * (thetaMax - thetaMin ) + thetaMin
-                    phi = np.random.random() * (phiMax - phiMin ) + phiMin
-
                     zAxis = normal
                     yAxis = np.array([0, 1, 0], dtype=np.float32 )
                     xAxis = np.cross(yAxis, zAxis )
@@ -481,22 +481,33 @@ def sampleCameraPoses(cverts, boxes,
     return camPoses
 
 
+def transformToXml(root ):
+    rstring = et.tostring(root, 'utf-8')
+    pstring = minidom.parseString(rstring)
+    xmlString = pstring.toprettyxml(indent="    ")
+    xmlString= xmlString.split('\n')
+    xmlString = [x for x in xmlString if len(x.strip()) != 0 ]
+    xmlString = '\n'.join(xmlString )
+    return xmlString
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', default="./xml/", help="outDir of xml file" )
-    parser.add_argument('--threshold', type=float, default = 0.3, help = 'the threshold to decide low quality mesh.')
-    parser.add_argument('--rs', type=int, default=0, help='the starting point')
-    parser.add_argument('--re', type=int, default=1600, help='the end point')
+    parser.add_argument('--threshold', type=float, default = 0.3, help = 'the threshold to decide low quality mesh.' )
+    parser.add_argument('--rs', type=int, default=0, help='the starting point' )
+    parser.add_argument('--re', type=int, default=1600, help='the end point' )
+    parser.add_argument('--sampleRate', type=float, default=100.0 )
     parser.add_argument('--sampleNum', type=int, default=3 )
-    parser.add_argument('--heightMin', type=float, default=1.5 )
-    parser.add_argument('--heightMax', type=float, default=1.9 )
+    parser.add_argument('--heightMin', type=float, default=1.4 )
+    parser.add_argument('--heightMax', type=float, default=1.8 )
     parser.add_argument('--distMin', type=float, default=0.3 )
     parser.add_argument('--distMax', type=float, default=1.5 )
     parser.add_argument('--thetaMin', type=float, default=-60 )
-    parser.add_argument('--thetaMax', type=float, default=45 )
-    parser.add_argument('--phiMin', type=float, default=-60 )
-    parser.add_argument('--phiMax', type=float, default=60 )
+    parser.add_argument('--thetaMax', type=float, default=10 )
+    parser.add_argument('--phiMin', type=float, default=-45 )
+    parser.add_argument('--phiMax', type=float, default=45 )
+    # Program
+    parser.add_argument('--program', default='~/OptixRenderer/src/bin/optixRenderer' )
 
     opt = parser.parse_args()
 
@@ -524,7 +535,7 @@ if __name__ == '__main__':
             continue
 
         poses = glob.glob(osp.join(camRootAbs, id_scan, 'pose', '*.txt') )
-        samplePoint = len(poses ) / 100
+        samplePoint = int(len(poses ) / opt.sampleRate )
         print('%d: %s: sample point %d' % (sceneCnt, id_scan, samplePoint ) )
 
         layOutFile = osp.join(layoutRoot, id_scan, id_scan + '.obj' )
@@ -589,11 +600,127 @@ if __name__ == '__main__':
                 opt.thetaMin, opt.thetaMax, \
                 opt.phiMin, opt.phiMax )
 
-
+        camNum = len(camPoses )
         with open(osp.join(outDir, 'camInitial.txt'), 'w') as camOut:
-            camOut.write('%d' % len(camPoses ) )
+            camOut.write('%d\n' % camNum )
             print('Final sampled camera poses: %d' % len(camPoses ) )
             for camPose in camPoses:
                 for n in range(0, 3):
                     camOut.write('%.3f %.3f %.3f\n' % \
                             (camPose[n, 0], camPose[n, 1], camPose[n, 2] ) )
+
+        # Downsize the size of the image
+        oldXML = osp.join(outDir, 'main.xml' )
+        newXML = osp.join(outDir, 'mainTemp.xml')
+
+        camFile = osp.join(outDir, 'camInitial.txt' )
+        if not osp.isfile(oldXML ) or not osp.isfile(camFile ):
+            continue
+
+        tree = et.parse(oldXML )
+        root  = tree.getroot()
+
+        sensors = root.findall('sensor')
+        for sensor in sensors:
+            film = sensor.findall('film')[0]
+            integers = film.findall('integer')
+            for integer in integers:
+                if integer.get('name' ) == 'width':
+                    integer.set('value', '160')
+                if integer.get('name' ) == 'height':
+                    integer.set('value', '120')
+
+        xmlString = transformToXml(root )
+        with open(newXML, 'w') as xmlOut:
+            xmlOut.write(xmlString )
+
+
+        # Render depth and normal
+        cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, newXML, 'camInitial.txt', 'im.rgbe', 2 )
+        cmd += ' --forceOutput'
+        os.system(cmd )
+
+        cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, newXML, 'camInitial.txt', 'im.rgbe', 4 )
+        cmd += ' --forceOutput'
+        os.system(cmd )
+
+        cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, newXML, 'camInitial.txt', 'im.rgbe', 5 )
+        cmd += ' --forceOutput'
+        os.system(cmd )
+
+        # Load the normal and depth
+        normalCosts = []
+        depthCosts = []
+        for n in range(0, camNum ):
+            # Load the depth and normal
+            normalName = osp.join(outDir, 'imnormal_%d.png' % (n+1) )
+            maskName = osp.join(outDir, 'immask_%d.png' % (n+1) )
+            depthName = osp.join(outDir, 'imdepth_%d.dat' % (n+1) )
+
+            normal = cv2.imread(normalName )
+            mask = cv2.imread(maskName )
+            with open(depthName, 'rb') as fIn:
+                hBuffer = fIn.read(4)
+                height = struct.unpack('i', hBuffer)[0]
+                wBuffer = fIn.read(4)
+                width = struct.unpack('i', wBuffer)[0]
+                dBuffer = fIn.read(4 * width * height )
+                depth = np.asarray(struct.unpack('f' * height * width, dBuffer), dtype=np.float32 )
+                depth = depth.reshape([height, width] )
+
+            # Compute the ranking
+            mask = (mask[:, :, 0] > 0.4 ).astype(np.float32 )
+            pixelNum = np.sum(mask )
+
+            if pixelNum == 0:
+                normalCosts.append(0 )
+                depthCosts.append(0 )
+
+            normal = normal.astype(np.float32 )
+            normal_gradx = np.abs(normal[:, 1:] - normal[:, 0:-1] )
+            normal_grady = np.abs(normal[1:, :] - normal[0:-1, :] )
+            ncost = (np.sum(normal_gradx ) + np.sum(normal_grady ) ) / pixelNum
+
+            dcost = np.sum(np.log(depth + 1 ) ) / pixelNum
+
+            normalCosts.append(ncost )
+            depthCosts.append(dcost )
+
+        normalCosts = np.array(normalCosts, dtype=np.float32 )
+        depthCosts = np.array(depthCosts, dtype=np.float32 )
+
+        normalRank = np.argsort(normalCosts ).astype(np.float32 )
+        depthRank = np.argsort(depthCosts ).astype(np.float32 )
+        normalRank = (normalRank - normalRank.min() ) \
+                / (normalRank.max() - normalRank.min() )
+        depthRank = (depthRank - depthRank.min() ) \
+                / (depthRank.max() - depthRank.min() )
+
+        totalRank = normalRank + 0.1 * depthRank
+        totalRank = np.argsort(totalRank )
+
+        camIndex = np.arange(0, camNum )[totalRank ]
+        camIndex = camIndex[::-1]
+        print(camIndex )
+
+        camPoses_s = []
+        selectedDir = osp.join(outDir, 'selected' )
+        os.system('mkdir %s' % selectedDir )
+        for n in range(0, samplePoint ):
+            camPoses_s.append(camPoses[camIndex[n] ] )
+
+            normalName = osp.join(outDir, 'imnormal_%d.png' % (camIndex[n] + 1) )
+            os.system('cp %s %s' % (normalName, selectedDir ) )
+
+        with open(osp.join(outDir, 'cam.txt'), 'w') as camOut:
+            camOut.write('%d\n' % len(camPoses_s ) )
+            print('Final sampled camera poses: %d' % len(camPoses_s ) )
+            for camPose in camPoses_s:
+                for n in range(0, 3):
+                    camOut.write('%.3f %.3f %.3f\n' % \
+                            (camPose[n, 0], camPose[n, 1], camPose[n, 2] ) )
+        '''
+        os.system('rm %s' % osp.join(outDir, 'mainTemp.xml') )
+        os.system('rm %s' % osp.join(outDir, 'imnormal_*.png') )
+        os.system('rm %s' % osp.join(outDir, 'imdepth_*.dat') )
+        '''
