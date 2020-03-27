@@ -12,6 +12,7 @@ import xml.etree.ElementTree as et
 from xml.dom import minidom
 import cv2
 import struct
+import scipy.ndimage as ndimage
 
 
 def loadMesh(name ):
@@ -503,7 +504,7 @@ if __name__ == '__main__':
     parser.add_argument('--distMin', type=float, default=0.3 )
     parser.add_argument('--distMax', type=float, default=1.5 )
     parser.add_argument('--thetaMin', type=float, default=-60 )
-    parser.add_argument('--thetaMax', type=float, default=10 )
+    parser.add_argument('--thetaMax', type=float, default=20 )
     parser.add_argument('--phiMin', type=float, default=-45 )
     parser.add_argument('--phiMax', type=float, default=45 )
     # Program
@@ -532,6 +533,9 @@ if __name__ == '__main__':
         os.system('mkdir -p %s' % outDir )
 
         if not osp.isfile(osp.join(outDir, 'transform.dat') ):
+            continue
+
+        if osp.isfile(osp.join(outDir, 'cam.txt') ):
             continue
 
         poses = glob.glob(osp.join(camRootAbs, id_scan, 'pose', '*.txt') )
@@ -669,12 +673,15 @@ if __name__ == '__main__':
                 depth = depth.reshape([height, width] )
 
             # Compute the ranking
-            mask = (mask[:, :, 0] > 0.4 ).astype(np.float32 )
+            mask = (mask[:, :, 0] > 0.4 )
+            mask = ndimage.binary_erosion(mask, border_value=1, structure=np.ones((3, 3) ) )
+            mask = mask.astype(np.float32 )
             pixelNum = np.sum(mask )
 
             if pixelNum == 0:
                 normalCosts.append(0 )
                 depthCosts.append(0 )
+                continue
 
             normal = normal.astype(np.float32 )
             normal_gradx = np.abs(normal[:, 1:] - normal[:, 0:-1] )
@@ -689,24 +696,23 @@ if __name__ == '__main__':
         normalCosts = np.array(normalCosts, dtype=np.float32 )
         depthCosts = np.array(depthCosts, dtype=np.float32 )
 
-        normalRank = np.argsort(normalCosts ).astype(np.float32 )
-        depthRank = np.argsort(depthCosts ).astype(np.float32 )
-        normalRank = (normalRank - normalRank.min() ) \
-                / (normalRank.max() - normalRank.min() )
-        depthRank = (depthRank - depthRank.min() ) \
-                / (depthRank.max() - depthRank.min() )
+        normalCosts = (normalCosts - normalCosts.min() ) \
+                / (normalCosts.max() - normalCosts.min() )
+        depthCosts = (depthCosts - depthCosts.min() ) \
+                / (depthCosts.max() - depthCosts.min() )
 
-        totalRank = normalRank + 0.1 * depthRank
-        totalRank = np.argsort(totalRank )
+        totalCosts = normalCosts + 0.3 * depthCosts
 
-        camIndex = np.arange(0, camNum )[totalRank ]
+        camIndex = np.argsort(totalCosts )
         camIndex = camIndex[::-1]
-        print(camIndex )
 
         camPoses_s = []
         selectedDir = osp.join(outDir, 'selected' )
+        if osp.isdir(selectedDir ):
+            os.system('rm -r %s' % selectedDir )
         os.system('mkdir %s' % selectedDir )
-        for n in range(0, samplePoint ):
+
+        for n in range(0, min(samplePoint, camNum ) ):
             camPoses_s.append(camPoses[camIndex[n] ] )
 
             normalName = osp.join(outDir, 'imnormal_%d.png' % (camIndex[n] + 1) )
@@ -719,8 +725,8 @@ if __name__ == '__main__':
                 for n in range(0, 3):
                     camOut.write('%.3f %.3f %.3f\n' % \
                             (camPose[n, 0], camPose[n, 1], camPose[n, 2] ) )
-        '''
+
         os.system('rm %s' % osp.join(outDir, 'mainTemp.xml') )
         os.system('rm %s' % osp.join(outDir, 'imnormal_*.png') )
+        os.system('rm %s' % osp.join(outDir, 'immask_*.png') )
         os.system('rm %s' % osp.join(outDir, 'imdepth_*.dat') )
-        '''
