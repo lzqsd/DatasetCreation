@@ -127,7 +127,7 @@ def addMaterial(root, name, materials, adobeRootAbs, uvScaleValue = None ):
             # Add roughness scale
             roughScale = et.SubElement(bsdf, 'float')
             roughScale.set('name', 'roughnessScale')
-            roughScaleValue = np.random.random() * 1.0 + 0.5
+            roughScaleValue = np.random.random() * 0.4 + 0.8
             roughScale.set('value', '%.3f' % roughScaleValue  )
 
         else:
@@ -181,7 +181,7 @@ def addEnvmap(root, envmapName, envRoot, mean, std):
     return root
 
 
-def sampleRadianceFromTemp(lowTemp = 4000, highTemp = 8000 ):
+def sampleRadianceFromTemp( lowTemp = 4000, highTemp = 8000 ):
     tempRadPair = {}
     tempRadPair[4000] = np.array([4892, 3202, 1846], dtype=np.float32 )
     tempRadPair[5000] = np.array([15248, 12072, 9608], dtype=np.float32 )
@@ -196,7 +196,8 @@ def sampleRadianceFromTemp(lowTemp = 4000, highTemp = 8000 ):
     wd = (su - sampledTemp) / 1000.0
     wu = 1 - wd
     rgb = tempRadPair[sd] * wd + tempRadPair[su] * wu
-    return rgb / 200.0
+
+    return rgb / 120
 
 def addAreaLight(root, name, fileName, transforms = None ):
     shape = et.SubElement(root, 'shape')
@@ -471,7 +472,7 @@ def changeToNewLight(root, mean, std, isWindow ):
         isArea = True
 
     if isArea == True:
-        isEnv = np.random.random() > 0.15
+        isEnv = np.random.random() > 0.5
     else:
         isEnv = True
 
@@ -513,7 +514,7 @@ def changeToNewLight(root, mean, std, isWindow ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Directories
-    parser.add_argument('--out', default="./xml1/", help="outdir of xml file" )
+    parser.add_argument('--out', default="./xml/", help="outdir of xml file" )
     parser.add_argument('--annotation', default='/newfoundland/zhl/Scan2cad/full_annotations.json', help='the file of the annotation' )
     # Rendering parameters
     parser.add_argument('--width', default=640, type=int, help='the width of the image' )
@@ -571,7 +572,7 @@ if __name__ == '__main__':
         camOutFile = osp.join(outdir, 'cam.txt')
         xmlOutFile = osp.join(outdir, 'main.xml')
         transformFile = osp.join(outdir, 'transform.dat')
-        if osp.isfile(xmlOutFile ) or (not osp.isfile(transformFile ) ):
+        if not osp.isfile(transformFile ):
             continue
 
         print('%d/%d: %s' % (sceneCnt, opt.re, id_scan ) )
@@ -824,6 +825,5 @@ if __name__ == '__main__':
         ############################################################################################
         # Create xml file
         xmlString = transformToXml(root )
-        if not osp.isfile(xmlOutFile ):
-            with open(xmlOutFile, 'w') as xmlOut:
-                xmlOut.write(xmlString )
+        with open(xmlOutFile, 'w') as xmlOut:
+            xmlOut.write(xmlString )

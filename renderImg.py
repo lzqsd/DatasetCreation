@@ -6,17 +6,17 @@ import argparse
 
 parser = argparse.ArgumentParser()
 # Directories
-parser.add_argument('--out', default="./xml/", help="outdir of xml file")
+parser.add_argument('--out', default="./xml", help="outdir of xml file")
 # Start and end point
 parser.add_argument('--rs', default=0, type=int, help='the width of the image' )
 parser.add_argument('--re', default=1600, type=int, help='the height of the image' )
+# xml file
+parser.add_argument('--xml', default='main', help='the xml file')
 # Render Mode
 parser.add_argument('--mode', default=0, type=int, help='the information being rendered')
 # Control
 parser.add_argument('--forceOutput', action='store_true', help='whether to overwrite previous results')
 parser.add_argument('--medianFilter', action='store_true', help='whether to use median filter')
-# output dir
-parser.add_argument('--outputDir', default='Images', help='the output dir')
 # Program
 parser.add_argument('--program', default='~/OptixRenderer/src/bin/optixRenderer', help='the location of render' )
 opt = parser.parse_args()
@@ -31,10 +31,10 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
 
     print('%d/%d: %s' % (n, len(scenes), sceneId ) )
 
-    outDir = osp.join(os.getcwd(), opt.outputDir, sceneId )
+    outDir = osp.join(os.getcwd(), opt.xml + '_' + opt.out.split('/')[-1], sceneId )
     os.system('mkdir -p %s' % outDir )
 
-    xmlFile = osp.join(scene, 'main.xml' )
+    xmlFile = osp.join(scene, '%s.xml' % opt.xml )
     camFile = osp.join(scene, 'cam.txt' )
     if not osp.isfile(xmlFile ) or not osp.isfile(camFile ):
         continue

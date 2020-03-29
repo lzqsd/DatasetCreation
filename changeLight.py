@@ -196,7 +196,7 @@ def sampleRadianceFromTemp(lowTemp = 4000, highTemp = 8000 ):
     wd = (su - sampledTemp) / 1000.0
     wu = 1 - wd
     rgb = tempRadPair[sd] * wd + tempRadPair[su] * wu
-    return rgb / 200.0
+    return rgb / 120
 
 def addAreaLight(root, name, fileName, transforms = None ):
     shape = et.SubElement(root, 'shape')
@@ -258,7 +258,6 @@ def addAreaLight(root, name, fileName, transforms = None ):
                 print('Wrong: unrecognizable type of transformation!' )
                 assert(False )
     return root
-
 
 def computeCameraEx(rotMat, trans, scale_scene = None, rotMat_scene = None, trans_scene = None ):
     view = np.array([0, 0, 1], dtype = np.float32 )
@@ -384,7 +383,7 @@ def changeToNewLight(root, mean, std, isWindow, isArea ):
         isArea = True
 
     if isArea == True:
-        isEnv = np.random.random() > 0.15
+        isEnv = np.random.random() > 0.5
     else:
         isEnv = True
 
@@ -425,7 +424,7 @@ def changeToNewLight(root, mean, std, isWindow, isArea ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Directories
-    parser.add_argument('--out', default="./xml1/", help="outdir of xml file" )
+    parser.add_argument('--out', default="./xml/", help="outdir of xml file" )
     parser.add_argument('--annotation', default='/newfoundland/zhl/Scan2cad/full_annotations.json', help='the file of the annotation' )
     # Material lists
     parser.add_argument('--matList', default='./MatLists/', help='the list of materials for objects' )
@@ -485,12 +484,16 @@ if __name__ == '__main__':
         root = tree.getroot()
 
         shapes = root.findall('shape')
-        isArea = True
+        isFindAreaLight = False
         for shape in shapes:
             emitters = shape.findall('emitter')
             if len(emitters ) > 0:
-                isArea = False
+                isFindAreaLight = True
                 break
+        if isFindAreaLight:
+            isArea = (np.random.random() > 0.8)
+        else:
+            isArea = (np.random.random() > 0.2)
 
         envmapList = []
         emitters = root.findall('emitter')
@@ -544,7 +547,6 @@ if __name__ == '__main__':
 
         with open(osp.join(outdir, 'l_config.txt'), 'w') as fOut:
             fOut.write('l: %s\n' % cLightDir.split('/')[-1] )
-
         cLightBoxName = osp.join(cLightDirAbs, 'bbox.txt')
         cLightBox = readBox(cLightBoxName )
 
@@ -571,7 +573,6 @@ if __name__ == '__main__':
         # Write environment map to xml file
         envId = envList[np.random.randint(len(envList ) ) ]
         root = addEnvmap(root, envId, envRoot, opt.envScaleMean, opt.envScaleStd )
-
 
 
         ###########################################

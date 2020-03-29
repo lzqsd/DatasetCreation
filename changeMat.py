@@ -127,7 +127,7 @@ def addMaterial(root, name, materials, adobeRootAbs, uvScaleValue = None ):
             # Add roughness scale
             roughScale = et.SubElement(bsdf, 'float')
             roughScale.set('name', 'roughnessScale')
-            roughScaleValue = np.random.random() * 1.0 + 0.5
+            roughScaleValue = np.random.random() * 4 + 0.8
             roughScale.set('value', '%.3f' % roughScaleValue  )
 
         else:
@@ -513,7 +513,7 @@ def changeToNewLight(root, mean, std, isWindow ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Directories
-    parser.add_argument('--out', default="./xml1/", help="outdir of xml file" )
+    parser.add_argument('--out', default="./xml/", help="outdir of xml file" )
     parser.add_argument('--annotation', default='/newfoundland/zhl/Scan2cad/full_annotations.json', help='the file of the annotation' )
     # Material lists
     parser.add_argument('--matList', default='./MatLists/', help='the list of materials for objects' )
@@ -553,14 +553,14 @@ if __name__ == '__main__':
 
     sceneCnt = 0
     for r in JSONHelper.read(filename_json ):
-        if not(sceneCnt >= opt.rs and sceneCnt < opt.re):
+        if not(sceneCnt >= opt.rs and sceneCnt < opt.re ):
             continue
         sceneCnt += 1
 
         id_scan = r["id_scan"]
 
-        outdir = osp.join(opt.out, id_scan)
-        camOutFile = osp.join(outdir, 'cam.txt')
+        outdir = osp.join(opt.out, id_scan )
+        camOutFile = osp.join(outdir, 'cam.txt' )
 
         oldXML = osp.join(outdir, 'main.xml' )
         newXML = osp.join(outdir, 'mainDiffMat.xml' )
@@ -754,8 +754,8 @@ if __name__ == '__main__':
 
         cLightDirAbs = cLightDirs[cLightIndex ]
         cLightMaterials = []
-        annFileName = osp.join(cLightDirAbs, 'ann.txt')
-        annNumFileName = osp.join(cLightDirAbs, 'matNum.txt')
+        annFileName = osp.join(cLightDirAbs, 'ann.txt' )
+        annNumFileName = osp.join(cLightDirAbs, 'matNum.txt' )
         isValid, anns = readMatObjectAnn(annFileName, annNumFileName )
         assert(isValid == True )
         for partId, matTypes in anns.items():
