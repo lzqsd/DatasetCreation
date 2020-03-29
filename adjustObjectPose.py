@@ -462,6 +462,7 @@ if __name__ == '__main__':
             writeScene(sceneNewName, sceneCads )
 
             # Write the transformation
+            '''
             transformList = []
             transformList.append(layout[2:] )
             for box in boxes:
@@ -470,5 +471,4 @@ if __name__ == '__main__':
 
             with open(transformName, 'wb') as fOut:
                 pickle.dump(transformList, fOut )
-
-
+            '''

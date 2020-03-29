@@ -250,8 +250,8 @@ def checkPointInPolygon(wallVertices, v ):
     oddNodes = False
     x, z = v[0], v[2]
     for i in range(len(wallVertices ) ):
-        if Z[i] < z and Z[j] >= z or Z[j] < z and Z[i] >= z:
-            if (X[i] + ((z - Z[i]) / (Z[j] - Z[i]) * (X[j] - X[i]) ) ) < x:
+        if (Z[i] < z and Z[j] >= z) or (Z[j] < z and Z[i] >= z ):
+            if (X[i] + ((z - Z[i]) / (Z[j] - Z[i]) * (X[j] - X[i]) ) ) <= x:
                 oddNodes = not oddNodes
         j=i
     return oddNodes
@@ -374,6 +374,9 @@ def sampleCameraPoses(cverts, boxes,
     X = [pt[0] for pt in wallVertices ]
     Z = [pt[2] for pt in wallVertices ]
 
+    meanPoint = [sum(X ) / len(X), 0, sum(Z) / len(Z) ]
+    meanPoint = np.array(meanPoint, dtype = np.float32 )
+
     thetaMin = thetaMin / 180.0 * np.pi
     thetaMax = thetaMax / 180.0 * np.pi
     phiMin = phiMin / 180.0 * np.pi
@@ -404,10 +407,13 @@ def sampleCameraPoses(cverts, boxes,
         # compute the segment direction
         direc = np.array( [X[i] - X[j], 0, Z[i] - Z[j] ], dtype = np.float32 )
         totalLen = np.sqrt(np.sum(direc * direc ) )
+        if totalLen == 0:
+            continue
+
         direc = direc / totalLen
 
         # Determine the normal direction
-        normal = np.array([direc[2], 0, direc[0] ], dtype = np.float32 )
+        normal = np.array([direc[2], 0, -direc[0] ], dtype = np.float32 )
         normal = normal / np.sqrt(np.sum(normal * normal ) )
 
         midPoint = np.array([0.5*(X[i] + X[j]), 0, 0.5*(Z[i] + Z[j]) ], dtype = np.float32 )
@@ -458,7 +464,12 @@ def sampleCameraPoses(cverts, boxes,
                     camPose = np.zeros((3, 3), dtype=np.float32 )
                     camPose[0, :] = pointLoc
 
-                    zAxis = normal
+                    centerAxis = meanPoint - pointLoc
+                    centerAxis = centerAxis / np.maximum(np.sqrt(
+                        np.sum(centerAxis * centerAxis) ), 1e-6 )
+                    zAxis = normal + 0.9 * centerAxis
+                    zAxis = zAxis / np.maximum(np.sqrt(
+                        np.sum(zAxis * zAxis) ), 1e-6 )
                     yAxis = np.array([0, 1, 0], dtype=np.float32 )
                     xAxis = np.cross(yAxis, zAxis )
 
@@ -528,15 +539,16 @@ if __name__ == '__main__':
 
         id_scan = r["id_scan"]
 
-
         outDir = osp.abspath(opt.out + "/" + id_scan )
         os.system('mkdir -p %s' % outDir )
 
         if not osp.isfile(osp.join(outDir, 'transform.dat') ):
             continue
 
+        '''
         if osp.isfile(osp.join(outDir, 'cam.txt') ):
             continue
+        '''
 
         poses = glob.glob(osp.join(camRootAbs, id_scan, 'pose', '*.txt') )
         samplePoint = int(len(poses ) / opt.sampleRate )
@@ -605,6 +617,9 @@ if __name__ == '__main__':
                 opt.phiMin, opt.phiMax )
 
         camNum = len(camPoses )
+        if camNum == 0:
+            continue
+
         with open(osp.join(outDir, 'camInitial.txt'), 'w') as camOut:
             camOut.write('%d\n' % camNum )
             print('Final sampled camera poses: %d' % len(camPoses ) )
@@ -727,6 +742,6 @@ if __name__ == '__main__':
                             (camPose[n, 0], camPose[n, 1], camPose[n, 2] ) )
 
         os.system('rm %s' % osp.join(outDir, 'mainTemp.xml') )
-        os.system('rm %s' % osp.join(outDir, 'imnormal_*.png') )
         os.system('rm %s' % osp.join(outDir, 'immask_*.png') )
         os.system('rm %s' % osp.join(outDir, 'imdepth_*.dat') )
+        os.system('rm %s' % osp.join(outDir, 'imnormal_*.png') )

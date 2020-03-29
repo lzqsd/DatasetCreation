@@ -513,7 +513,7 @@ def changeToNewLight(root, mean, std, isWindow ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Directories
-    parser.add_argument('--out', default="./xml/", help="outdir of xml file" )
+    parser.add_argument('--out', default="./xml1/", help="outdir of xml file" )
     parser.add_argument('--annotation', default='/newfoundland/zhl/Scan2cad/full_annotations.json', help='the file of the annotation' )
     # Rendering parameters
     parser.add_argument('--width', default=640, type=int, help='the width of the image' )

@@ -4,7 +4,7 @@ import os.path as osp
 import glob
 import numpy as np
 
-scenes = glob.glob('Images/scene*')
+scenes = glob.glob('Images1/scene*')
 for scene in scenes:
     hdrs = glob.glob(osp.join(scene, '*.rgbe') )
     for hdr in hdrs:

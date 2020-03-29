@@ -29,9 +29,6 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
     scene = scenes[n]
     sceneId = scene.split('/')[-1]
 
-    if not sceneId == 'scene0582_00':
-        continue
-
     print('%d/%d: %s' % (n, len(scenes), sceneId ) )
 
     outDir = osp.join(os.getcwd(), opt.outputDir, sceneId )

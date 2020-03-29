@@ -20,7 +20,7 @@ parser.add_argument('--re', default=1600, type=int, help='the height of the imag
 parser.add_argument('--forceOutput', action='store_true', help='whether to overwrite previous results')
 parser.add_argument('--medianFilter', action='store_true', help='whether to use median filter')
 # output dir
-parser.add_argument('--outputDir', default='Images', help='the output dir')
+parser.add_argument('--outputDir', default='ImagesDiffLight', help='the output dir')
 # Program
 parser.add_argument('--program', default='~/OptixRendererLight/src/bin/optixRenderer', help='the location of render' )
 opt = parser.parse_args()
@@ -37,8 +37,6 @@ scenes = sorted(scenes )
 for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
     scene = scenes[n]
     sceneId = scene.split('/')[-1]
-    if sceneId != 'scene0582_00':
-        continue
 
     print('%d/%d: %s' % (n, len(scenes), sceneId ) )
 
@@ -50,26 +48,9 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
     if not osp.isfile(xmlFile ) or not osp.isfile(camFile ):
         continue
 
-    cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, xmlFile, 'cam.txt', osp.join(outDir, 'im.rgbe'), 7)
+    cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, xmlFile, 'cam.txt', osp.join(outDir, 'im.rgbe'), 7 )
 
     if opt.forceOutput:
         cmd += ' --forceOutput'
 
     os.system(cmd )
-
-    envNames = glob.glob(osp.join(outDir, 'imenv_*.dat') )
-    for envName in envNames:
-        with open(envName, 'rb') as envIn:
-            byteArr = envIn.read()
-        byteArr = struct.unpack('%df' % pixelNum, byteArr )
-        byteArr = np.array(byteArr, dtype=np.float32 )
-        byteArr = byteArr.reshape(imHeight, imWidth, envHeight, envWidth, 3 )
-
-        envNewName = envName.replace('.dat', '.hdr')
-        envs = byteArr.transpose([0, 2, 1, 3, 4] )
-        envs = envs.reshape(imHeight * envHeight, imWidth * envWidth, 3 )
-        cv2.imwrite(envNewName, envs )
-
-        os.system('rm %s' % envName )
-
-    break
