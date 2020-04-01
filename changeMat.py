@@ -575,7 +575,6 @@ if __name__ == '__main__':
 
         ########################################################################################
         # Write layout to the xml file
-        layOutMesh = osp.join(layoutRoot, id_scan, 'uv_mapped.obj' )
         wallMatTypes = sceneWallMatPair[id_scan ]
         floorMatTypes = sceneFloorMatPair[id_scan ]
         wallMatType = wallMatTypes[np.random.randint(len(wallMatTypes ) ) ]

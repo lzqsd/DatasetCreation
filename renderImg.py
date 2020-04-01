@@ -2,6 +2,7 @@ import glob
 import os
 import os.path as osp
 import argparse
+import xml.etree.ElementTree as et
 
 
 parser = argparse.ArgumentParser()
@@ -39,6 +40,18 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
     if not osp.isfile(xmlFile ) or not osp.isfile(camFile ):
         continue
 
+    tree  = et.parse(xmlFile )
+    root = tree.getroot()
+
+    shapes = root.findall('shape')
+    isFindAreaLight = False
+    for shape in shapes:
+        emitters = shape.findall('emitter')
+        if len(emitters ) > 0:
+            isFindAreaLight = True
+            break
+
+
     cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, xmlFile, 'cam.txt', osp.join(outDir, 'im.rgbe'), opt.mode )
 
     if opt.forceOutput:
@@ -46,5 +59,9 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
 
     if opt.medianFilter:
         cmd += ' --medianFilter'
+
+    if not isFindAreaLight:
+        print('Warning: no area light found, may need more samples.' )
+        cmd += ' --maxIteration 2'
 
     os.system(cmd )

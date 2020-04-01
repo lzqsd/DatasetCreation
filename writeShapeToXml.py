@@ -590,6 +590,8 @@ if __name__ == '__main__':
         ########################################################################################
         # Write layout to the xml file
         layOutMesh = osp.join(layoutRoot, id_scan, 'uv_mapped.obj' )
+        containerMesh = osp.join(layoutRoot, id_scan, 'container.obj' )
+
         wallMatTypes = sceneWallMatPair[id_scan ]
         floorMatTypes = sceneFloorMatPair[id_scan ]
         wallMatType = wallMatTypes[np.random.randint(len(wallMatTypes ) ) ]
@@ -606,6 +608,7 @@ if __name__ == '__main__':
         uvScale = 0.2 + 0.2 * np.random.random()
         root = addMaterial(root, id_scan, materials, adobeRootAbs, uvScale )
         root = addShape(root, id_scan, layOutMesh, transforms[0], materials )
+        root = addShape(root, id_scan, containerMesh, transforms[0], materials )
 
         ########################################################################################
         # Write shapes to the xml file
