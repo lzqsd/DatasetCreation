@@ -12,26 +12,21 @@ import cv2
 
 parser = argparse.ArgumentParser()
 # Directories
-parser.add_argument('--out', default="./xml/", help="outdir of xml file")
+parser.add_argument('--xmlRoot', default="./xml/", help="outdir of xml file")
 # Start and end point
 parser.add_argument('--rs', default=0, type=int, help='the width of the image' )
 parser.add_argument('--re', default=1600, type=int, help='the height of the image' )
+# xml file
+parser.add_argument('--xmlFile', default='main', help='the xml file')
+# output file
+parser.add_argument('--outRoot', default='./', help='output directory')
 # Control
 parser.add_argument('--forceOutput', action='store_true', help='whether to overwrite previous results')
-parser.add_argument('--medianFilter', action='store_true', help='whether to use median filter')
-# output dir
-parser.add_argument('--outputDir', default='ImagesDiffLight', help='the output dir')
 # Program
 parser.add_argument('--program', default='~/OptixRendererLight/src/bin/optixRenderer', help='the location of render' )
 opt = parser.parse_args()
 
-imHeight = 120
-imWidth = 160
-envWidth = 32
-envHeight = 16
-pixelNum = imHeight * imWidth * envHeight * envWidth * 3
-
-scenes = glob.glob(osp.join(opt.out, 'scene*') )
+scenes = glob.glob(osp.join(opt.xmlRoot, 'scene*') )
 scenes = [x for x in scenes if osp.isdir(x) ]
 scenes = sorted(scenes )
 for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
@@ -40,10 +35,10 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
 
     print('%d/%d: %s' % (n, len(scenes), sceneId ) )
 
-    outDir = osp.join(os.getcwd(), opt.outputDir, sceneId )
+    outDir = osp.join(os.getcwd(), opt.outRoot, opt.xmlFile + '_' + opt.xmlRoot.split('/')[-1], sceneId )
     os.system('mkdir -p %s' % outDir )
 
-    xmlFile = osp.join(scene, 'main.xml' )
+    xmlFile = osp.join(scene, '%s.xml' % opt.xmlFile )
     camFile = osp.join(scene, 'cam.txt' )
     if not osp.isfile(xmlFile ) or not osp.isfile(camFile ):
         continue
