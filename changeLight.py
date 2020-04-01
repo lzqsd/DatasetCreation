@@ -393,14 +393,37 @@ def changeToNewLight(root, mean, std, isWindow, isArea ):
         print('Warning: the envmap will be turned dark.')
 
     if isArea:
+        isFirst = True
         for shape in root.iter('shape'):
+            shId = shape.get('id')
+            if shId.find('ceiling_lamp') == -1 \
+                    and shId.find('03636649') == -1:
+                        continue
+            else:
+                string = shape.findall('string')[0]
+                filename = string.get('value')
+                if filename.find('aligned_light.obj') == -1 \
+                        and filename.find('alignedNew.obj') == -1:
+                            continue
+
             emitters = shape.findall('emitter')
             for emitter in emitters:
-                eType = emitter.get('type')
-                if eType == 'area':
-                    rgb = emitter.findall('rgb')[0]
-                    rgbColor = sampleRadianceFromTemp()
-                    rgb.set('value', '%.3f %.3f %.3f' % (rgbColor[0], rgbColor[1], rgbColor[2] ) )
+                shape.remove(emitter )
+
+            if isFirst == True:
+                isFirst = False
+            else:
+                if np.random.random() > 0.8:
+                    continue
+
+            # Add new emitter
+            emitter = et.SubElement(shape, 'emitter')
+            emitter.set('type', 'area')
+
+            rgbColor = sampleRadianceFromTemp()
+            rgb = et.SubElement(emitter, 'rgb')
+            rgb.set('value', '%.3f %.3f %.3f' \
+                    % (rgbColor[0], rgbColor[1], rgbColor[2] ) )
     else:
         for shape in root.iter('shape'):
             emitters = shape.findall('emitter')
@@ -491,9 +514,17 @@ if __name__ == '__main__':
                 isFindAreaLight = True
                 break
         if isFindAreaLight:
-            isArea = (np.random.random() > 0.8)
+            isArea = (np.random.random() > 0.8 )
         else:
-            isArea = (np.random.random() > 0.2)
+            isArea = (np.random.random() > 0.2 )
+
+
+        isWindow = False
+        for shape in shapes:
+            shId = shape.get('id')
+            if shId.find('window')  != -1:
+                isWindow = True
+                break
 
         envmapList = []
         emitters = root.findall('emitter')
@@ -502,72 +533,6 @@ if __name__ == '__main__':
                 envmapList.append(emitter )
         for emitter in envmapList:
             root.remove(emitter )
-
-        ceilingList = []
-        isWindow = False
-        for shape in shapes:
-            shapeId = shape.get('id')
-            nameArr = shapeId.split('_')
-            if nameArr[0] == 'window':
-                isWindow = True
-            elif nameArr[0] == 'ceiling':
-                ceilingList.append(shape )
-        for shape in ceilingList:
-            root.remove(shape )
-
-        ceilingMatList = []
-        mats = root.findall('bsdf')
-        for mat in mats:
-            matId = mat.get('id')
-            nameArr = matId.split('_')
-            if nameArr[0] == 'ceiling':
-                ceilingMatList.append(mat )
-        for mat in ceilingMatList:
-            root.remove(mat )
-
-        ##########################################################################################
-        # Write door, window curtain to the xml file
-        random.shuffle(cLightDirs )
-        cLightDir = osp.join(shapeNetRoot, '/'.join(cLightDirs[0].split('/')[-2:] ) )
-
-        cLightDirAbs = cLightDirs[0]
-        cLightMaterials = []
-        annFileName = osp.join(cLightDirAbs, 'ann.txt')
-        annNumFileName = osp.join(cLightDirAbs, 'matNum.txt')
-        isValid, anns = readMatObjectAnn(annFileName, annNumFileName )
-        assert(isValid == True )
-        for partId, matTypes in anns.items():
-            matType = matTypes[np.random.randint(len(matTypes ) ) ]
-            objMats = objList[matType ]
-            objMat = objMats[np.random.randint(len(objMats ) ) ]
-            objMat = osp.join(adobeRoot, objMat )
-            cLightMaterials.append( ('part%d' % partId, objMat ) )
-        uvScale = 0.7 + 0.6 * np.random.random()
-        root = addMaterial(root, 'ceiling_lamp_' + cLightDir.split('/')[-1], cLightMaterials, adobeRootAbs, uvScale )
-
-        with open(osp.join(outdir, 'l_config.txt'), 'w') as fOut:
-            fOut.write('l: %s\n' % cLightDir.split('/')[-1] )
-        cLightBoxName = osp.join(cLightDirAbs, 'bbox.txt')
-        cLightBox = readBox(cLightBoxName )
-
-        layoutDir = osp.join(layoutRootAbs, id_scan )
-        cornerFile = osp.join(layoutDir, id_scan + '_corners.npy' )
-        corners = np.load(cornerFile ).item()
-
-        # Add light
-        cLight_corners = utils.get_light_corners(corners['light_ctr'], cLightBox )
-        trCLight = utils.get_transform(cLight_corners, cLightBox, 'li' )
-        trCLight = trCLight + transforms[0]
-
-        cad_fileAbs = osp.join(cLightDirAbs, 'aligned_light.obj')
-        if osp.isfile(cad_fileAbs ):
-            cad_file = osp.join(cLightDir, 'aligned_shape.obj' )
-            root = addShape(root, 'ceiling_lamp_' + cLightDir.split('/')[-1], cad_file, trCLight, cLightMaterials )
-            cad_file = osp.join(cLightDir, 'aligned_light.obj' )
-            root = addAreaLight(root, 'ceiling_lamp_' + cLightDir.split('/')[-1], cad_file, trCLight )
-        else:
-            cad_file = osp.join(cLightDir, 'alignedNew.obj' )
-            root = addAreaLight(root,  'ceiling_lamp_' + cLightDir.split('/')[-1], cad_file, trCLight )
 
         ############################################################################################
         # Write environment map to xml file
