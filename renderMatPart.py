@@ -16,7 +16,7 @@ parser.add_argument('--xmlFile', default='main', help='the xml file')
 # output file
 parser.add_argument('--outRoot', default='/siggraphasia20dataset/code/Routine/DatasetCreation/', help='output directory')
 # Render Mode
-parser.add_argument('--mode', default=0, type=int, help='the information being rendered')
+parser.add_argument('--mode', default=7, type=int, help='the information being rendered')
 # Control
 parser.add_argument('--forceOutput', action='store_true', help='whether to overwrite previous results')
 parser.add_argument('--medianFilter', action='store_true', help='whether to use median filter')
@@ -42,28 +42,13 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
     if not osp.isfile(xmlFile ) or not osp.isfile(camFile ):
         continue
 
-    tree  = et.parse(xmlFile )
-    root = tree.getroot()
-
-    shapes = root.findall('shape')
-    isFindAreaLight = False
-    for shape in shapes:
-        emitters = shape.findall('emitter')
-        if len(emitters ) > 0:
-            isFindAreaLight = True
-            break
-
-
-    cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, xmlFile, 'cam.txt', osp.join(outDir, 'imDirect.rgbe'), opt.mode )
+    cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, xmlFile, 'cam.txt', osp.join(outDir, 'im.hdr'), opt.mode )
+    print(cmd )
 
     if opt.forceOutput:
         cmd += ' --forceOutput'
 
     if opt.medianFilter:
         cmd += ' --medianFilter'
-
-    if not isFindAreaLight:
-        print('Warning: no area light found, may need more samples.' )
-        cmd += ' --maxIteration 3'
 
     os.system(cmd )
