@@ -6,14 +6,14 @@ import numpy as np
 
 parser = argparse.ArgumentParser()
 # Directories
-parser.add_argument('--xmlRoot', default="/siggraphasia20dataset/code/Routine/scenes/xml", help="outdir of xml file")
+parser.add_argument('--xmlRoot', default="/siggraphasia20dataset/code/Routine/scenes/xml1", help="outdir of xml file")
 # Start and end point
-parser.add_argument('--rs', default=0, type=int, help='the width of the image' )
-parser.add_argument('--re', default=1, type=int, help='the height of the image' )
+parser.add_argument('--rs', default=3, type=int, help='the width of the image' )
+parser.add_argument('--re', default=4, type=int, help='the height of the image' )
 # xml file
 parser.add_argument('--xmlFile', default='main', help='the xml file')
 # output file
-parser.add_argument('--outRoot', default='/siggraphasia20dataset/code/Routine/DatasetCreation/', help='output directory')
+parser.add_argument('--outRoot', default='/eccv20dataset/DatasetNew_test', help='output directory')
 # Control
 parser.add_argument('--forceOutput', action='store_true', help='whether to overwrite previous results')
 # Program
@@ -39,8 +39,8 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
 
     imNames = glob.glob(osp.join(outDir, 'im_*.hdr') )
     envNames = glob.glob(osp.join(outDir, 'imenv_*.hdr') )
-    if len(envNames ) == len(imNames ):
-        continue
+    #if len(envNames ) == len(imNames ):
+    #    continue
 
     cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, xmlFile, 'cam.txt', osp.join(outDir, 'im.rgbe'), 7 )
 

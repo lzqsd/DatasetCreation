@@ -13,21 +13,16 @@ parser.add_argument('--re', default=1000, type=int, help='the height of the imag
 # xml file
 parser.add_argument('--xmlFile', default='main', help='the xml file')
 # output file
-parser.add_argument('--outRoot', default='/siggraphasia20dataset/code/Routine/DatasetCreation/', help='output directory')
+parser.add_argument('--outRoot', default='/eccv20dataset/DatasetNew_test/', help='output directory')
 # Control
 parser.add_argument('--forceOutput', action='store_true', help='whether to overwrite previous results')
 # Program
 parser.add_argument('--program', default='/siggraphasia20dataset/OptixRendererLight/src/bin/optixRenderer', help='the location of render' )
 opt = parser.parse_args()
 
-'''
 scenes = glob.glob(osp.join(opt.xmlRoot, 'scene*') )
 scenes = [x for x in scenes if osp.isdir(x) ]
 scenes = sorted(scenes ) 
-''' 
-with open(osp.join(opt.outRoot, opt.xmlFile + '_' + opt.xmlRoot.split('/')[-1] + '.txt'), 'r') as fIn:
-    scenes = fIn.readlines()
-scenes = [x.strip() for x in scenes ]
 
 for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
     scene = scenes[n]

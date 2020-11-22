@@ -7,21 +7,21 @@ import xml.etree.ElementTree as et
 
 parser = argparse.ArgumentParser()
 # Directories
-parser.add_argument('--xmlRoot', default="/siggraphasia20dataset/code/Routine/scenes/xml", help="outdir of xml file")
+parser.add_argument('--xmlRoot', default="/siggraphasia20dataset/code/Routine/scenes/xml1", help="outdir of xml file")
 # Start and end point
 parser.add_argument('--rs', default=4, type=int, help='the width of the image' )
 parser.add_argument('--re', default=5, type=int, help='the height of the image' )
 # xml file
-parser.add_argument('--xmlFile', default='main', help='the xml file')
+parser.add_argument('--xmlFile', default='mainDiffLight', help='the xml file')
 # output file
-parser.add_argument('--outRoot', default='/siggraphasia20dataset/code/Routine/DatasetCreation/', help='output directory')
+parser.add_argument('--outRoot', default='/siggraphasia20dataset/code/Routine/DatasetCreation', help='output directory')
 # Render Mode
 parser.add_argument('--mode', default=0, type=int, help='the information being rendered')
 # Control
 parser.add_argument('--forceOutput', action='store_true', help='whether to overwrite previous results')
 parser.add_argument('--medianFilter', action='store_true', help='whether to use median filter')
 # Program
-parser.add_argument('--program', default='/siggraphasia20dataset/OptixRenderer_MatPart/src/bin/optixRenderer', help='the location of render' )
+parser.add_argument('--program', default='/siggraphasia20dataset/OptixRenderer/src/bin/optixRenderer', help='the location of render' )
 opt = parser.parse_args()
 
 
@@ -35,7 +35,9 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
     print('%d/%d: %s' % (n, len(scenes), sceneId ) )
 
     outDir = osp.join(opt.outRoot, opt.xmlFile + '_' + opt.xmlRoot.split('/')[-1], sceneId )
-    os.system('mkdir -p %s' % outDir )
+    if not osp.isdir(outDir ):
+        continue
+        os.system('mkdir -p %s' % outDir )
 
     xmlFile = osp.join(scene, '%s.xml' % opt.xmlFile )
     camFile = osp.join(scene, 'cam.txt' )
@@ -54,7 +56,8 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
             break
 
 
-    cmd = '%s -f %s -c %s -o %s -m %d' % (opt.program, xmlFile, 'cam.txt', osp.join(outDir, 'imDirect.rgbe'), opt.mode )
+    cmd = '%s -f %s -c %s -o %s -m %d --camStart 1 --camEnd 2' % (opt.program, xmlFile,
+                                                                 'cam.txt', osp.join(outDir, 'im.rgbe'), opt.mode )
 
     if opt.forceOutput:
         cmd += ' --forceOutput'
@@ -64,6 +67,8 @@ for n in range(opt.rs, min(opt.re, len(scenes ) ) ):
 
     if not isFindAreaLight:
         print('Warning: no area light found, may need more samples.' )
-        cmd += ' --maxIteration 3'
+        cmd += ' --maxIteration 4'
+    else:
+        cmd += ' --maxIteration 4'
 
     os.system(cmd )

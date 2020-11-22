@@ -138,7 +138,7 @@ def addMaterial(root, name, materials, adobeRootAbs, uvScaleValue = None ):
                 albedoStr = albedoStr.split(' ')
                 albedoValue = []
                 for n in range(0, 3):
-                    albedoValue.append(float(albedoStr[0] ) )
+                    albedoValue.append(float(albedoStr[n] ) )
                 roughValue = float(lines[1] )
             albedo = et.SubElement(bsdf, 'rgb')
             albedo.set('name', 'albedo')
