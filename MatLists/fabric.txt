@@ -1,4 +1,5 @@
 Material__wool_tartan_multicolored
+Material__cotton_blend_small_fishbone
 Material__fabric_plushie
 Material__polyester_heather_herringbone_interlock
 Material__polyester_hydrosoft_weave

@@ -38,9 +38,9 @@ def addShape(root, name, fileName, transforms = None, materials = None ):
             elif tr[0] == 'rot':
                 rotMat = tr[1]
                 rotTr = rotMat[0,0] + rotMat[1,1] + rotMat[2,2]
-                rotCos = (rotTr - 1) * 0.5
+                rotCos = np.clip((rotTr - 1) * 0.5, -1, 1 )
                 rotAngle = np.arccos(np.clip(rotCos, -1, 1 ) )
-                if np.abs(rotAngle) > 1e-2:
+                if np.abs(rotAngle) > 1e-3 and np.abs(rotAngle - np.pi) > 1e-3:
                     rotSin = np.sqrt(1 - rotCos * rotCos )
                     rotAxis_x = 0.5 / rotSin * (rotMat[2, 1] - rotMat[1, 2] )
                     rotAxis_y = 0.5 / rotSin * (rotMat[0, 2] - rotMat[2, 0] )
@@ -514,15 +514,15 @@ def changeToNewLight(root, mean, std, isWindow ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Directories
-    parser.add_argument('--out', default="./xml/", help="outdir of xml file" )
-    parser.add_argument('--annotation', default='/newfoundland/zhl/Scan2cad/full_annotations.json', help='the file of the annotation' )
+    parser.add_argument('--out', default="../scenes/xml1/", help="outdir of xml file" )
+    parser.add_argument('--annotation', default='/siggraphasia20dataset/full_annotations.json', help='the file of the annotation' )
     # Rendering parameters
     parser.add_argument('--width', default=640, type=int, help='the width of the image' )
     parser.add_argument('--height', default=480, type=int, help='the height of the image' )
-    parser.add_argument('--camGap', default=100, type=int, help='the gap to sample camera positions' )
     parser.add_argument('--sampleCount', default=1024, type=int, help='the by default number of samples' )
     # Material lists
     parser.add_argument('--matList', default='./MatLists/', help='the list of materials for objects' )
+    parser.add_argument('--sceneList', default='./forcedFloorTemp.txt', help='the list of scene to be processed')
     parser.add_argument('--sceneMatList', default='./MatSceneLists/', help='the list of materials for scenes' )
     # Lighting parameters
     parser.add_argument('--envScaleMean', default=120, type=float, help='the mean of envScale' )
@@ -543,8 +543,8 @@ if __name__ == '__main__':
 
     shapeNetRootAbs = params['shapenetAbs']
     layoutRootAbs = params["scannet_layoutAbs"]
-    camRootAbs = params['scannet_camAbs']
     adobeRootAbs = params['adobestockAbs']
+    camRootAbs = params['scannet_camAbs']
     envRootAbs = params['envmapAbs']
 
     doorDirs = glob.glob(osp.join(shapeNetRootAbs, 'door', '*') )
@@ -560,6 +560,11 @@ if __name__ == '__main__':
     objList, wallList, floorList = readMatList(opt.matList )
     envList = readEnvList(envRootAbs )
 
+    if not opt.sceneList is None:
+        with open(opt.sceneList, 'r') as fIn:
+            sceneIdList = fIn.readlines()
+        sceneIdList = [x.strip() for x in sceneIdList ]
+
     sceneCnt = 0
     for r in JSONHelper.read(filename_json ):
         if not(sceneCnt >= opt.rs and sceneCnt < opt.re):
@@ -567,11 +572,13 @@ if __name__ == '__main__':
         sceneCnt += 1
 
         id_scan = r["id_scan"]
+        if not opt.sceneList is None:
+            if not id_scan in sceneIdList:
+                continue
 
         outdir = osp.join(opt.out, id_scan)
-        camOutFile = osp.join(outdir, 'cam.txt')
         xmlOutFile = osp.join(outdir, 'main.xml')
-        transformFile = osp.join(outdir, 'transform.dat')
+        transformFile = osp.join(outdir, 'transform.dat').replace('/xml/', '/xml1/')
         if not osp.isfile(transformFile ):
             continue
 
@@ -681,7 +688,9 @@ if __name__ == '__main__':
         annFileName = osp.join(doorDirAbs, 'ann.txt' )
         annNumFileName = osp.join(doorDirAbs, 'matNum.txt' )
         isValid, anns = readMatObjectAnn(annFileName, annNumFileName )
-        assert(isValid == True )
+        if isValid == False:
+            print(annFileName, annNumFileName, anns )
+            assert(isValid == True )
         for partId, matTypes in anns.items():
             matType = matTypes[np.random.randint(len(matTypes ) ) ]
             objMats = objList[matType ]
@@ -754,7 +763,7 @@ if __name__ == '__main__':
         isCurtain = (np.random.random() > 0.5 )
         layoutDir = osp.join(layoutRootAbs, id_scan )
         cornerFile = osp.join(layoutDir, id_scan + '_corners.npy' )
-        corners = np.load(cornerFile ).item()
+        corners = np.load(cornerFile, allow_pickle=True ).item()
 
         # Add light
         cLight_corners = utils.get_light_corners(corners['light_ctr'], cLightBox )

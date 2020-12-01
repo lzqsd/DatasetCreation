@@ -152,8 +152,6 @@ def checkOverlapApproximate(bverts1, bverts2 ):
 
 
 def findSupport(lverts, boxes, cats ):
-
-
     # Find support for every object
     boxList = []
     for n in range(0, len(boxes) ):
@@ -170,7 +168,7 @@ def findSupport(lverts, boxes, cats ):
                     isOverlap = checkOverlapApproximate(boxes[n][0], boxes[m][0] )
                     if isOverlap:
                         if m < n:
-                            if not n in boxList[m]:
+                            if not n in boxList[m]: 
                                 bList.append(m )
                         else:
                             bList.append(m )
@@ -210,6 +208,9 @@ def adjustHeightBoxes(boxId, boxes, cads, boxList ):
         cads[n][0] = cads[n][0] + delta
 
         boxes[n].append( ('t', delta.squeeze() ) )
+        cads[n].append( ('t', delta.squeeze() ) )
+        if len(boxList[n]) != 0:
+            adjustHeightBoxes(n, boxes, cads, boxList )
         cads[n].append( ('t', delta.squeeze() ) )
         if len(boxList[n]) != 0:
             adjustHeightBoxes(n, boxes, cads, boxList )
@@ -354,7 +355,8 @@ def moveBoxInWall(cverts, bboxes, cads, threshold = 0.3):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--out', default="./xml/", help="outDir of xml file" )
+    parser.add_argument('--out', default="./xml/", help="outDir of xml file" ) 
+    parser.add_argument('--isOutputAll', action='store_true', )
     parser.add_argument('--threshold', type=float, default = 0.3, help = 'the threshold to decide low quality mesh.')
     parser.add_argument('--rs', type=int, default=0, help='the starting point')
     parser.add_argument('--re', type=int, default=1600, help='the end point')
@@ -420,19 +422,17 @@ if __name__ == '__main__':
             boxes.append([bverts, bfaces, ('s', scale), ('rot', rot), ('t', trans) ] )
             cads.append([vertices, faces, ('s', scale), ('rot', rot), ('t', trans) ] )
 
-            cats.append(catid_cad )
-
-        # Output origin bounding boxes
         sceneDir = osp.join(outDir, 'scenBoxes' )
         os.system('mkdir %s' % sceneDir )
 
         sceneOrigName = osp.join(sceneDir, 'boxesOrigin.obj' )
         sceneBoxes = boxes + [layout ]
         writeScene(sceneOrigName, sceneBoxes )
-
-        sceneOrigName = osp.join(sceneDir, 'cadsOrigin.obj' )
-        sceneCads = cads + [layout ]
-        writeScene(sceneOrigName, sceneCads )
+        
+        if opt.isOutputAll:
+            sceneOrigName = osp.join(sceneDir, 'cadsOrigin.obj' )
+            sceneCads = cads + [layout ]
+            writeScene(sceneOrigName, sceneCads )
 
         # Build the relationship and adjust heights
         floorList, boxList = findSupport(lverts, boxes, cats )

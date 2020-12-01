@@ -114,7 +114,7 @@ def computeRotMat(angle, axis ):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Directories
-    parser.add_argument('--xmlRoot', default='/siggraphasia20dataset/code/Routine/scenes/xml')
+    parser.add_argument('--xmlRoot', default='/siggraphasia20dataset/code/Routine/scenes/xml1')
     parser.add_argument('--xmlFile', default="main" )
     parser.add_argument('--outRoot', default='/siggraphasia20dataset/code/Routine/DatasetCreation/')
     parser.add_argument('--program', default='/siggraphasia20dataset/OptixRenderer/src/bin/optixRenderer')
@@ -374,7 +374,7 @@ if __name__ == '__main__':
                 # Compute the 3D bounding box
                 cam_zAxis = origin - target
                 cam_zAxis = cam_zAxis / np.sqrt(np.sum(cam_zAxis * cam_zAxis ) )
-                cam_yAxis = up 
+                cam_yAxis = up
                 cam_xAxis = np.cross(cam_yAxis, cam_zAxis )
                 cam_rotMat = np.concatenate([
                     cam_xAxis[np.newaxis, :],
